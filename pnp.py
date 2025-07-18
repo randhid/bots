@@ -81,6 +81,7 @@ def is_arm_at_target(target_x, target_y, target_z, tolerance=0.01):
     return distance <= tolerance
 
 def detect_object(frame):
+    """
     Detects objects in a frame based on HSV color thresholds.
     This function uses color-based segmentation to identify objects of interest.
     
@@ -89,25 +90,16 @@ def detect_object(frame):
         
     Returns:
         tuple: (x, y) pixel coordinates of detected object center, or None if no object found
-   
+    """
     # Convert BGR color space to HSV (Hue, Saturation, Value) for better color detection
     # HSV is more robust for color-based object detection than RGB
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     
-    # Define color range for red object detection (adjust these values for your target object)
-    # Lower HSV threshold for red color (handles red objects that are more orange-red)
-    lower = np.array([0, 120, 70])
-    upper = np.array([10, 255, 255])
-    mask1 = cv2.inRange(hsv, lower, upper)
-    
-    # Upper HSV threshold for red color (handles red objects that are more purple-red)
-    # This is needed because red wraps around the HSV color wheel
-    lower = np.array([170, 120, 70])
-    upper = np.array([180, 255, 255])
-    mask2 = cv2.inRange(hsv, lower, upper)
-    
-    # Combine both masks using bitwise OR to detect red objects across the entire HSV range
-    mask = mask1 | mask2
+    # Define color range for green object detection (adjust these values for your target object)
+    # Green hue ranges from approximately 35 to 85 in HSV
+    lower = np.array([35, 50, 50])   # Lower HSV threshold for green color
+    upper = np.array([85, 255, 255]) # Upper HSV threshold for green color
+    mask = cv2.inRange(hsv, lower, upper)
 
     # Find contours (outlines) of detected objects in the binary mask
     # RETR_EXTERNAL: Only retrieves external contours (ignores holes inside objects)
@@ -130,7 +122,7 @@ def detect_object(frame):
     return None
 
 def get_3d_point(depth_frame, pixel, intrinsics):
-    
+    """
     Converts a 2D pixel coordinate to 3D world coordinates using depth information.
     
     Args:
@@ -139,8 +131,9 @@ def get_3d_point(depth_frame, pixel, intrinsics):
         intrinsics: Camera intrinsic parameters (focal length, principal point, etc.)
         
     Returns:
-        list: [x, y, z]3rdinates in meters relative to camera
-      # Get the depth value at the specified pixel location
+        list: [x, y, z] coordinates in meters relative to camera
+    """
+    # Get the depth value at the specified pixel location
     depth = depth_frame.get_distance(pixel[0], pixel[1])
     # Use RealSense SDK to deproject 2D pixel to 3D point using camera intrinsics
     # This converts from image coordinates to real-world coordinates
@@ -200,12 +193,15 @@ def move_arm_to(pose_pub, x, y, z, orientation=[0,0,0,1], timeout=30.0):
     
     return False
 
-def control_gripper(gripper_pub, command):    Sends commands to control the robotic gripper (open/close).
+def control_gripper(gripper_pub, command):
+    """
+    Sends commands to control the robotic gripper (open/close).
     
     Args:
         gripper_pub: ROS publisher for gripper commands
         command: String command ("open" or "close")
-    # Publish the gripper command (open or lose") as a String message to the gripper topic
+    """
+    # Publish the gripper command (open or "close") as a String message to the gripper topic
     gripper_pub.publish(String(command))
     # Sleep for 1 second to give the gripper time to actuate before continuing
     rospy.sleep(1)
